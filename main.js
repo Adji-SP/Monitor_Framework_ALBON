@@ -54,8 +54,8 @@ class Application {
         // Initialize services concurrently
         const servicePromises = [
             this._initializeAPI(db),
-            // this._initializeSerial(db, mainWindow),
-            this._initializeWebSocket(db, mainWindow)
+            process.env.USE_SERIAL === 'true' ? this._initializeSerial(db, mainWindow) : Promise.resolve(),
+            process.env.USE_WS === 'true' ? this._initializeWebSocket(db, mainWindow) : Promise.resolve()
         ];
 
         await Promise.all(servicePromises);
@@ -67,10 +67,10 @@ class Application {
         this.managers.api.start();
     }
 
-    // async _initializeSerial(db, mainWindow) {
-    //     this.managers.serial = new SerialManager(db, mainWindow);
-    //     await this.managers.serial.initialize();
-    // }
+    async _initializeSerial(db, mainWindow) {
+        this.managers.serial = new SerialManager(db, mainWindow);
+        await this.managers.serial.initialize();
+    }
 
     async _initializeWebSocket(db, mainWindow) {
         this.managers.websocket = new WebsocketManager(db, mainWindow);
