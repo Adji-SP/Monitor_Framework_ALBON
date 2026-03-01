@@ -1,4 +1,4 @@
-# 🌊 Alprog Boncos - For Monitoring System Framework - with Complete Backend System
+#  Alprog Boncos - For Monitoring System Framework - with Complete Backend System
 
 > **Transform your industrial monitoring dreams into reality!** This isn't just another backend framework - it's your gateway to building robust, real-time monitoring systems that adapt, scale, and never miss a beat.
 
