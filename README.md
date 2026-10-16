@@ -1,5 +1,16 @@
 #  Alprog Boncos - For Monitoring System Framework - with Complete Backend System
 
+Fermentor Kopi: [BTS7960 mixer dashboard setup, controls and safety limits](MIXER_CONTROL.md).
+Session recording: [Start/Stop CSV and dashboard video](RECORDING.md).
+
+The live dashboard keeps the existing light theme, with nine compact gauges
+above six simultaneous trend plots (temperature, humidity, CO2, oxygen, pH and
+pressure). Mixer controls and session recording are in the right-hand panel on
+desktop; smaller screens stack the panels below the plots. Expand **Schedule &
+safety** or **CSV & video details** for help. Warnings and command results stay
+visible. Trend axes scale to the last 25 frames; unavailable readings leave gaps.
+The detailed Trends and Session Recorder pages remain available in the sidebar.
+
 > **Transform your industrial monitoring dreams into reality!** This isn't just another backend framework - it's your gateway to building robust, real-time monitoring systems that adapt, scale, and never miss a beat.
 
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)]()

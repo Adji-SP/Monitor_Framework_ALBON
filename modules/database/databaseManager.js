@@ -34,8 +34,8 @@ class DatabaseManager {
 
             console.log(`Database initialized: ${this.useFirebase ? 'Firebase' : 'MySQL'}`);
         } catch (error) {
-            console.error('Database initialization failed:', error);
-            throw error;
+            console.error('Database initialization failed, continuing in standalone/mock mode:', error.message);
+            this.db = null;
         }
     }
 

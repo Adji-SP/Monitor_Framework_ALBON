@@ -5,6 +5,8 @@ resource/trash/
 resource/asset/
 resource/
 
+records/
+
 trash/
 
 # Logs
@@ -20,6 +22,7 @@ Thumbs.db
 .vscode/
 
 # Build artifacts (optional)
+records/
 dist/
 build/
 

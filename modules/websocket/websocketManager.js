@@ -2,9 +2,10 @@
 const WebSocketHandler = require('../../lib/com/webSocketCommunicator');
 
 class WebsocketManager {
-    constructor(database, mainWindow) {
+    constructor(database, mainWindow, mixerControl = null) {
         this.database = database;
         this.mainWindow = mainWindow;
+        this.mixerControl = mixerControl;
         this.websocketHandler = null;
         this.config = this.getWebsocketConfig();
 
@@ -70,6 +71,7 @@ class WebsocketManager {
             );
 
             this._setupEventHandlers();
+            this.websocketHandler.mixerControl = this.mixerControl;
             this._setupDefaultRequestHandlers();
             this._setupDefaultRPCMethods();
 

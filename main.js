@@ -9,10 +9,15 @@ const APIServer = require('./modules/api/apiServer');
 const SerialManager = require('./modules/serial/serialManager');
 const IPCManager = require('./modules/ipc/ipcManager');
 const WebsocketManager = require('./modules/websocket/websocketManager');
+const MixerBridge = require('./lib/com/mixerBridge');
 
 class Application {
     constructor() {
         this.managers = {};
+        this.mixer = new MixerBridge({
+            getSerial: () => this.managers.serial,
+            broadcast: (message) => this.managers.websocket?.broadcastToAll(message)
+        });
         this.isInitialized = false;
     }
 
@@ -68,12 +73,19 @@ class Application {
     }
 
     async _initializeSerial(db, mainWindow) {
-        this.managers.serial = new SerialManager(db, mainWindow);
+        // Relay Fermentor Kopi USB console frames to dashboard WebSocket clients
+        // (websocket manager initializes in parallel, so look it up per frame)
+        this.managers.serial = new SerialManager(db, mainWindow, {
+            onMixer: (message) => this.mixer.receive(message),
+            onConnection: (state) => this.mixer.connectionChanged(state),
+            onFrame: (frame) => this.managers.websocket?.broadcastToAll({ type: 'sensor_update', data: frame }),
+            onEvent: (event) => this.managers.websocket?.broadcastToAll({ type: 'device_log', data: event })
+        });
         await this.managers.serial.initialize();
     }
 
     async _initializeWebSocket(db, mainWindow) {
-        this.managers.websocket = new WebsocketManager(db, mainWindow);
+        this.managers.websocket = new WebsocketManager(db, mainWindow, this.mixer);
         await this.managers.websocket.initialize();
     }
 

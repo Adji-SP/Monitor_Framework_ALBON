@@ -44,6 +44,9 @@ API_PORT=
 USE_WS=true
 WS_PORT=8080
 WS_HOST=0.0.0.0
+# Physical mixer controls also require a loopback client IP and an exact browser Origin.
+MIXER_CONTROL_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+RECORDING_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 WS_AUTH_ENABLED=false
 WS_AUTH_TOKEN=your_websocket_auth_token_here
 WS_DB_TABLE=sensors_data
@@ -59,10 +62,13 @@ WS_LOG_LEVEL=info
 # -----------------------------------------------------------------
 # Serial port configuration for reading data from sensors.
 # These values are used for the serial connection.
-SERIAL_PORT= null
-SERIAL_BAUDRATE= 9600
-SERIAL_LINE_DELIMITER='\r\n'
-SERIAL_DATA_TYPES= 
+# Fermentor Kopi ESP32-S3 prints text on its USB console -> fermentor-text
+USE_SERIAL=true
+SERIAL_PORT=null
+SERIAL_BAUDRATE=115200
+SERIAL_LINE_DELIMITER=\n
+SERIAL_DATA_TYPES=fermentor-text
+SERIAL_DEVICE_ID=FERMENTOR_KOPI_ESP32S3
 SERIAL_DB_TABLE_NAME= 
 SERIAL_REQUIRED_FIELDS= []
 SERIAL_FIELD_TO_ENCRYPT= []

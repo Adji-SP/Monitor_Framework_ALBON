@@ -2,7 +2,8 @@
 const SerialCommunicator = require('../../lib/com/serialCommunicator');
 
 class SerialManager {
-    constructor(database, mainWindow) {
+    // handlers: { onFrame(frame), onEvent(event) } for the 'fermentor-text' data type
+    constructor(database, mainWindow, handlers = {}) {
         console.log('=== SerialManager Constructor ===');
         console.log('Database provided:', !!database);
         console.log('MainWindow provided:', !!mainWindow);
@@ -10,7 +11,7 @@ class SerialManager {
         this.database = database;
         this.mainWindow = mainWindow;
         this.serialCommunicator = null;
-        this.config = this.getSerialConfig();
+        this.config = { ...this.getSerialConfig(), ...handlers };
 
         console.log('Final SerialManager config:', JSON.stringify(this.config, null, 2));
         console.log('=== End SerialManager Constructor ===');
@@ -34,11 +35,16 @@ class SerialManager {
         const rawDelimiter = process.env.SERIAL_LINE_DELIMITER || '\r\n';
         const parsedDelimiter = parseLineDelimiter(rawDelimiter);
 
+        // "null" / empty in .env means auto-detect
+        const rawPort = (process.env.SERIAL_PORT || '').trim();
+        const portPath = rawPort && rawPort.toLowerCase() !== 'null' ? rawPort : null;
+
         const config = {
-            portPath: process.env.SERIAL_PORT || null,
-            baudRate: process.env.SERIAL_BAUDRATE ? parseInt(process.env.SERIAL_BAUDRATE, 10) : 9600,
+            portPath,
+            baudRate: process.env.SERIAL_BAUDRATE ? parseInt(process.env.SERIAL_BAUDRATE, 10) : 115200,
             lineDelimiter: parsedDelimiter,
-            dataType: process.env.SERIAL_DATA_TYPES || 'json-object',
+            dataType: process.env.SERIAL_DATA_TYPES || 'fermentor-text',
+            deviceId: process.env.SERIAL_DEVICE_ID || 'FERMENTOR_KOPI_ESP32S3',
             dbTableName: process.env.SERIAL_DB_TABLE_NAME || 'sensors_data',
             requiredFields: process.env.SERIAL_REQUIRED_FIELDS
                 ? process.env.SERIAL_REQUIRED_FIELDS.split(',').map(f => f.trim()).filter(Boolean)
@@ -115,6 +121,11 @@ class SerialManager {
         if (this.serialCommunicator) {
             this.serialCommunicator.sendData(data);
         }
+    }
+
+    writeMixerCommand(line) {
+        if (!this.serialCommunicator) return Promise.reject(new Error('Serial not initialized'));
+        return this.serialCommunicator.writeMixerCommand(line);
     }
 
     async close() {
