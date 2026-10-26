@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 const API = 'http://localhost:3001';
 
-export const RecordingControls = ({ recorder, compact = false }) => {
+export const RecordingControls = ({ recorder, compact = false, apiStatus }) => {
   const [video, setVideo] = useState(true);
   const [now, setNow] = useState(Date.now);
   const { status, isRecording, sampleCount, eventCount, videoBytes, startedAt, error, result, start, stop } = recorder;
@@ -19,6 +19,7 @@ export const RecordingControls = ({ recorder, compact = false }) => {
     <section className="card recording-panel" data-compact={compact} aria-label="Session recording">
       <div className="card-header"><h2>Record session</h2><span className="status-badge">{status === 'done' ? 'Saved' : status}</span></div>
       <div className="card-body">
+        {apiStatus === 'OFFLINE' && <p className="notice">USB readings work without the API. Start the storage API to save CSV/video.</p>}
         <div className="recording-actions">
           <button className="btn-primary" type="button" disabled={busy} onClick={() => start(video)}>Start recording</button>
           <button className="btn-danger-sm" type="button" disabled={!isRecording} onClick={stop}>{compact ? 'Stop & save' : 'Stop recording & save'}</button>

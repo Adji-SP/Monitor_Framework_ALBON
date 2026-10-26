@@ -1,22 +1,23 @@
 // src/App.js - ALBON Fermentor Kopi monitor (sidebar layout shared with the Data & Firmware console)
 import React, { useState, useEffect } from 'react';
-import { useWebSocket } from './hooks/useWebSocket';
+import { useWebSerial } from './hooks/useWebSerial';
 import { useApi } from './hooks/useApi';
 import { useRecorder } from './hooks/useRecorder';
+import { useSidebar } from './hooks/useSidebar';
 
 import { Sidebar, Topbar, PAGES } from './components/Header';
-import { MetricsOverview, TelemetrySummary, TelemetryDetails } from './components/MetricsOverview';
+import { MetricsOverview, TelemetryDetails, TelemetrySummary } from './components/MetricsOverview';
 import { DashboardTrends } from './components/DashboardTrends';
 import { MixerControl } from './components/MixerControl';
 import { RealtimeChart, RecentFrames, useTelemetryHistory } from './components/RealtimeChart';
 import { WebSocketConsole } from './components/WebSocketConsole';
+import { SerialMonitor } from './components/SerialMonitor';
 import { RecordPanel } from './components/RecordPanel';
 import { RecordingControls } from './components/RecordingControls';
 import { DbRecords } from './components/DbRecords';
 
-const WS_URL = `ws://localhost:${process.env.REACT_APP_WS_PORT || 8080}`;
-
 function App() {
+  const [sidebarCollapsed, toggleSidebar] = useSidebar();
   // Current page mirrors location.hash (#dashboard, #console, ...) so refresh keeps it.
   const pageFromHash = () => {
     const id = window.location.hash.slice(1);
@@ -34,18 +35,17 @@ function App() {
   }, []);
 
   const recorder = useRecorder();
+  const serial = useWebSerial(recorder.capture);
   const {
-    status: wsStatus,
+    status: serialStatus,
     telemetry,
     mixer,
     mixerControlAvailable,
     mixerCommand,
     sendMixerCommand,
     messages,
-    activeDevice,
-    connect: reconnectWs,
-    sendMessage
-  } = useWebSocket(WS_URL, recorder.capture);
+    activeDevice
+  } = serial;
 
   const {
     apiStatus,
@@ -59,7 +59,6 @@ function App() {
   const history = useTelemetryHistory(telemetry);
 
   const handleGlobalRefresh = () => {
-    reconnectWs();
     checkApiHealth();
     fetchSensorRecords();
   };
@@ -67,13 +66,14 @@ function App() {
   const current = PAGES.find((p) => p.id === page);
 
   return (
-    <>
-      <Sidebar page={page} onNavigate={setPage} recorder={recorder} />
+    <div className="app-shell" data-sidebar-collapsed={sidebarCollapsed}>
+      <Sidebar page={page} onNavigate={setPage} recorder={recorder}
+        collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       <div className="layout">
         <Topbar
           group={current.group}
           title={current.label}
-          wsStatus={wsStatus}
+          serial={serial}
           apiStatus={apiStatus}
           telemetry={telemetry}
           isRecording={recorder.isRecording}
@@ -89,11 +89,12 @@ function App() {
               </div>
               <MetricsOverview telemetry={telemetry} />
               <div className="dashboard-workspace">
-                <DashboardTrends history={history} />
-                <aside className="dashboard-rail" aria-label="Mixer, recording and device">
-                  <MixerControl compact mixer={mixer} wsStatus={wsStatus}
+                <DashboardTrends history={history} connectionStatus={serialStatus} serialStats={serial.stats} />
+                <aside className="dashboard-rail" aria-label="Serial monitor, mixer, recording and device">
+                  <SerialMonitor messages={messages} status={serialStatus} stats={serial.stats} serial={serial} />
+                  <MixerControl compact mixer={mixer} connectionStatus={serialStatus}
                     controlAvailable={mixerControlAvailable} command={mixerCommand} onCommand={sendMixerCommand} />
-                  <RecordingControls compact recorder={recorder} />
+                  <RecordingControls compact recorder={recorder} apiStatus={apiStatus} />
                   <TelemetryDetails telemetry={telemetry} activeDevice={activeDevice} />
                 </aside>
               </div>
@@ -124,13 +125,13 @@ function App() {
 
           {page === 'console' && (
             <div className="stack">
-              <PageTitle kicker="Monitoring" title="Remote Console" subtitle="WebSocket frames and device log lines relayed from the backend." />
-              <WebSocketConsole messages={messages} onSendMessage={sendMessage} />
+              <PageTitle kicker="Monitoring" title="USB Serial Console" subtitle={`Direct USB output. ${serialStatus === 'CONNECTED' ? serial.stats.baudRate : serial.baudRate} baud selected; change it in the dashboard's Serial monitor.`} />
+              <WebSocketConsole messages={messages} directSerial />
             </div>
           )}
         </main>
       </div>
-    </>
+    </div>
   );
 }
 

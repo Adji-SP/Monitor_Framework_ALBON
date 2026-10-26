@@ -4,8 +4,9 @@
   "description": "ALBON Monitoring Framework with Express REST API, WebSocket Server, and Native React Dashboard",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "start:server": "node server.js",
+    "start": "node server.js --browser-serial",
+    "start:server": "node server.js --browser-serial",
+    "start:server:bridge": "node server.js --serial-bridge",
     "start:web": "react-scripts start",
     "start:electron": "electron .",
     "dev": "concurrently \"npm run start:server\" \"npm run start:web\"",
@@ -15,7 +16,8 @@
     "build:web": "react-scripts build",
     "build:electron": "electron-builder",
     "switch-db": "node scripts/switch-db.js",
-    "test": "react-scripts test"
+    "test": "react-scripts test",
+    "test:usb-browser": "node scripts/test-usb-dashboard.cjs"
   },
   "author": "alprog_boncos",
   "license": "MIT",

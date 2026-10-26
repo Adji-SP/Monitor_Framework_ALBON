@@ -38,7 +38,7 @@ const lineOf = (m) => {
   return m.payload;
 };
 
-export const WebSocketConsole = ({ messages, onSendMessage }) => {
+export const WebSocketConsole = ({ messages, onSendMessage, directSerial = false }) => {
   const [filter, setFilter] = useState('all');
   const [userMsg, setUserMsg] = useState(JSON.stringify(SAMPLE_FRAME, null, 2));
   const [sendError, setSendError] = useState('');
@@ -55,7 +55,7 @@ export const WebSocketConsole = ({ messages, onSendMessage }) => {
   };
 
   return (
-    <div className="grid-split">
+    <div className="grid-split" data-direct-serial={directSerial}>
       <div className="card">
         <div className="card-header">
           <span>Output</span>
@@ -80,7 +80,7 @@ export const WebSocketConsole = ({ messages, onSendMessage }) => {
             <div className="console-empty">
               <span>&gt;_</span>
               <strong>No lines yet</strong>
-              <p>Frames appear when the backend relays the ESP32-S3 USB console.</p>
+              <p>{directSerial ? 'Click Connect USB to read the ESP32-S3 console directly.' : 'Frames appear when the backend relays the ESP32-S3 USB console.'}</p>
             </div>
           ) : (
             shown.map((m) => (
@@ -94,7 +94,7 @@ export const WebSocketConsole = ({ messages, onSendMessage }) => {
         </div>
       </div>
 
-      <div className="card">
+      {!directSerial && <div className="card">
         <div className="card-header">Send test frame</div>
         <div className="card-body">
           <label className="field">
@@ -110,7 +110,7 @@ export const WebSocketConsole = ({ messages, onSendMessage }) => {
             Same shape the backend builds from the firmware's <strong>SENSOR READINGS</strong> block. The board itself cannot receive commands over USB.
           </div>
         </div>
-      </div>
+      </div>}
     </div>
   );
 };

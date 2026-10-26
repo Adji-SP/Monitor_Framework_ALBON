@@ -47,7 +47,7 @@ export const GaugeMeter = ({ title, subtitle, value, unit, min = 0, max = 100, c
       <div className="gauge-body">
         <div className="gauge-dial">
           <svg viewBox="0 0 180 100" style={{ width: '100%', height: '100%' }} role="img" aria-label={`${title}: ${isOk ? value.toFixed(decimals) + ' ' + unit : shownStatus}`}>
-            <path d={bgArcPath} fill="none" stroke="#e5e7eb" strokeWidth={strokeWidth} strokeLinecap="round" />
+            <path d={bgArcPath} fill="none" stroke="var(--gauge-track, #e5e7eb)" strokeWidth={strokeWidth} strokeLinecap="round" />
             {pct > 0 && (
               <path d={valueArcPath} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" />
             )}

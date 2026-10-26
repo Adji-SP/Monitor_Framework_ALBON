@@ -6,6 +6,9 @@ const APIServer = require('./modules/api/apiServer');
 const SerialManager = require('./modules/serial/serialManager');
 const WebsocketManager = require('./modules/websocket/websocketManager');
 const MixerBridge = require('./lib/com/mixerBridge');
+// In direct-browser mode, only the recording/database API runs here. Never
+// claim the USB port or start a competing WebSocket telemetry transport.
+const browserSerial = process.argv.includes('--browser-serial') || !process.argv.includes('--serial-bridge');
 
 class StandaloneServer {
     constructor() {
@@ -36,14 +39,14 @@ class StandaloneServer {
             this.managers.api.start();
 
             // 3. Initialize WebSocket Server
-            if (process.env.USE_WS !== 'false') {
+            if (!browserSerial && process.env.USE_WS !== 'false') {
                 this.managers.websocket = new WebsocketManager(db, null, this.mixer);
                 await this.managers.websocket.initialize();
                 console.log('✅ WebSocket Manager ready');
             }
 
             // 4. Initialize Serial Communication (if configured)
-            if (process.env.USE_SERIAL === 'true') {
+            if (!browserSerial && process.env.USE_SERIAL === 'true') {
                 // Relay Fermentor Kopi USB console frames to dashboard WebSocket clients
                 const ws = this.managers.websocket;
                 this.managers.serial = new SerialManager(db, null, {
@@ -59,7 +62,8 @@ class StandaloneServer {
             this.isInitialized = true;
             console.log('\n------------------------------------------------------');
             console.log(`🌐 Express API Server running on : http://localhost:${this.managers.api.getPort()}`);
-            console.log(`💬 WebSocket Server running on : ws://localhost:${process.env.WEBSOCKET_PORT || process.env.WS_PORT || 8080}`);
+            console.log(browserSerial ? 'USB serial is owned by the browser. Click Connect USB in the dashboard; no WebSocket is needed.'
+                : `💬 WebSocket Server configured on : ws://localhost:${process.env.WEBSOCKET_PORT || process.env.WS_PORT || 8080}`);
             console.log('------------------------------------------------------\n');
         } catch (error) {
             console.error('❌ Standalone Server initialization failed:', error);

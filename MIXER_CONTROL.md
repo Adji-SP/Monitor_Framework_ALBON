@@ -13,36 +13,27 @@ commands. The new single-file image is
 Do not flash while the mixer could cause injury: disconnect motor power for
 the initial verification. Firmware automatically arms the schedule after boot.
 
-From `Monitor_Framework_ALBON`, retain your existing database settings in `.env`
-and verify:
-
-```dotenv
-USE_SERIAL=true
-USE_WS=true
-SERIAL_PORT=COM8
-SERIAL_BAUDRATE=115200
-SERIAL_LINE_DELIMITER=\n
-SERIAL_DATA_TYPES=fermentor-text
-MIXER_CONTROL_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-```
-
-Use the actual ESP32 native USB COM port, not the Nextion UART. Close espflash's
-monitor, PlatformIO serial monitor and any other program holding that port.
+The dashboard now uses [direct browser USB serial](USB_DASHBOARD.md), without
+WebSocket for sensor readings or mixer commands. Retain database settings in
+`.env`. Close espflash/PlatformIO serial monitors and any old Node serial bridge
+holding the ESP32 native USB port, then run from `Monitor_Framework_ALBON`:
 
 ```powershell
 npm run dev
 ```
 
-Open `http://localhost:3000/#dashboard` on the computer connected to the ESP32.
-Restart the backend as well as refreshing the page after updating. If CRA uses
-another port, add its exact local origin to `MIXER_CONTROL_ORIGINS` and restart
-the backend. Existing sensor recording/database features are unchanged.
+Open `http://localhost:3000/#dashboard` in desktop Chrome/Edge and click
+**Connect USB**, selecting the ESP32 USB Serial/JTAG device (currently COM9).
+Restart an old backend after updating: the default scripts now use
+`--browser-serial`, leaving USB to the browser. `npm run start:web` alone is
+sufficient for live readings and mixer control; the API is needed for recording
+and database features, not the live USB connection.
 
 ## Controls and limits
 
 - **Stop / pause auto** disables the bridge and pauses future scheduled runs.
-  It is available even when telemetry is stale, provided the WebSocket permits
-  local control. A disconnected USB port or missing firmware ACK is an error,
+  It is available even when telemetry is stale, provided USB is connected from
+  the localhost dashboard. A disconnected USB port or missing firmware ACK is an error,
   never a claim that the motor stopped. Use the machine's local stop if unsure.
 - **Resume auto** requires fresh telemetry, the Nextion page-0 connection,
   paused state, and checking "Mixer is clear; allow scheduled motion". It
@@ -62,13 +53,11 @@ the backend. Existing sensor recording/database features are unchanged.
   autonomous schedule. ESP32 reset/power-cycle starts a new schedule and does
   not preserve a prior STOP. Keep a physical emergency stop on motor power.
 
-Controls currently accept **loopback peers and allowlisted local browser
-origins only**, honoring existing WebSocket authentication if enabled. This
-does not make the old general-purpose WebSocket framework safe for the public
-internet. The stock dashboard uses its existing authentication configuration;
-it does not add a token/login flow. Do not port-forward the backend. LAN/remote
-control needs a separately secured deployment; Electron's historical file-based
-screen is not this React dashboard and is not granted physical-control access.
+Direct USB controls are enabled only on localhost/127.0.0.1/IPv6 loopback and
+require explicit browser USB permission. They do not use WebSocket authentication.
+The optional legacy bridge retains its own loopback/origin/authentication checks.
+Do not port-forward the API or bridge. Electron's historical file-based screen
+is not this React dashboard and is not granted physical-control access.
 
 ## Protocol / maintenance
 
@@ -80,8 +69,9 @@ MIXER <id:u32> <STOP|RESUME> <boot_id:u32> <revision:u32> <expires_ms:u64>
 [MIXER_STATUS] {"version":1,...}
 ```
 
-The backend generates command IDs, uses firmware uptime for a short expiry,
-and checks freshness, origin, client address and state. Firmware separately
+The browser generates command IDs, uses firmware uptime for a short expiry,
+and checks freshness, local origin and state. The optional Node bridge retains
+equivalent checks for legacy clients. Firmware separately
 checks boot marker, revision, expiry and HMI before RESUME. STOP intentionally
 does not depend on those freshness checks. Partial/oversized invalid lines are
 discarded. Status/ACK messages can interleave with sensor lines without becoming

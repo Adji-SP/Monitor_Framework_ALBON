@@ -2,11 +2,47 @@
 
 Fermentor Kopi: [BTS7960 mixer dashboard setup, controls and safety limits](MIXER_CONTROL.md).
 Session recording: [Start/Stop CSV and dashboard video](RECORDING.md).
+Direct USB: [Connect the ESP32 to the dashboard without WebSocket](USB_DASHBOARD.md).
 
-The live dashboard keeps the existing light theme, with nine compact gauges
-above six simultaneous trend plots (temperature, humidity, CO2, oxygen, pH and
-pressure). Mixer controls and session recording are in the right-hand panel on
-desktop; smaller screens stack the panels below the plots. Expand **Schedule &
+Run `npm run dev`, open `http://localhost:3000`, and click **Connect USB** to
+choose the ESP32 USB Serial/JTAG port. The browser reads sensors directly;
+the Node API is only needed for recording/database features. Stop old serial
+monitors or bridge processes first. The default start scripts now leave USB
+ownership to the browser. No firmware flash is needed for this change.
+
+The dashboard now includes a compact **Serial monitor** with raw output,
+Pause display / Clear view, and received byte/line/frame counters. If USB says
+connected but gauges remain WAIT, these counters distinguish no USB traffic
+from text that has not produced a sensor frame. Pausing the monitor does not
+pause sensor reading or CSV/video recording. Plain `node server.js` also leaves
+USB alone; the optional old backend reader requires `--serial-bridge`.
+
+The serial panel also has a **Baud rate** selector and **Apply & refresh** button.
+Choose a rate and apply it to reopen the same port without reloading the page;
+while disconnected, the selection is used by **Connect USB**. The current port
+rate is shown separately from an unapplied selection. CSV/video keeps recording
+through the brief sensor-data gap. This uses Web Serial directly, not AJAX or
+WebSocket. Native USB Serial/JTAG ignores baud rate; real UART devices need a
+matching firmware rate. Refresh does not stop the mixer or replay commands.
+
+Sensor decoding accepts both the original `SENSOR READINGS` blocks and newer
+headerless `DS18B20 ... siklus selesai` cycles / confirmed `DATA,...` CSV rows.
+SHT30 may precede SCD41. Matching text/CSV samples are counted once, raw ADC
+voltages are retained, and unavailable readings remain unavailable. This fixes
+the case where raw serial lines arrive but gauges/charts stay at zero frames.
+See [supported formats](USB_DASHBOARD.md#supported-sensor-output-formats).
+
+The dashboard restores the original light monitoring layout with a dark slate
+sidebar: nine gauges across the top, six simultaneous trend plots on the left,
+and the **Serial monitor** at the top of the right-hand column. Compact mixer
+controls, recording and device details follow below it. Smaller screens wrap
+the gauges and stack the panels. Use **Collapse sidebar** below the logo to
+switch to icon-only navigation; **Expand sidebar** restores the labels. Your
+choice is saved in this browser. On phones the sidebar starts collapsed unless
+you saved another preference; expanded navigation overlays the content.
+Layout changes do not reconnect USB, reset the board or interrupt recording.
+The banner and mint theme have been removed; USB parsing, sensor ranges and
+motor interlocks are unchanged. Expand **Schedule &
 safety** or **CSV & video details** for help. Warnings and command results stay
 visible. Trend axes scale to the last 25 frames; unavailable readings leave gaps.
 The detailed Trends and Session Recorder pages remain available in the sidebar.

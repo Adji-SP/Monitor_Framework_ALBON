@@ -8,7 +8,7 @@ const countdown = (ms) => {
     .map((v) => String(v).padStart(2, '0')).join(':');
 };
 
-export const MixerControl = ({ mixer, wsStatus, controlAvailable, command, onCommand, compact = false }) => {
+export const MixerControl = ({ mixer, wsStatus, connectionStatus = wsStatus, controlAvailable, command, onCommand, compact = false }) => {
   const [now, setNow] = useState(Date.now);
   const [confirmedState, setConfirmedState] = useState(null);
   // Expire displayed state even if USB stops while the WebSocket stays open.
@@ -16,7 +16,7 @@ export const MixerControl = ({ mixer, wsStatus, controlAvailable, command, onCom
     const timer = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(timer);
   }, []);
-  const connected = wsStatus === 'CONNECTED';
+  const connected = connectionStatus === 'CONNECTED';
   const fresh = connected && mixer && now - mixer.receivedAt <= 2000;
   const canResume = fresh && controlAvailable && mixer.hmi_connected && !mixer.armed && !command?.pending;
   useEffect(() => {
@@ -66,7 +66,7 @@ export const MixerControl = ({ mixer, wsStatus, controlAvailable, command, onCom
             {compact ? 'Mixer clear; allow scheduled motion' : 'Mixer is clear; allow scheduled motion'}
           </label>
         </div>
-        {!controlAvailable && <p className="notice">{compact ? 'Use the dashboard on the USB-connected computer to control the mixer.' : 'Controls are available from the local dashboard on the USB-connected computer.'}</p>}
+        {!controlAvailable && <p className="notice">{compact ? 'Connect USB from this computer’s localhost dashboard to control the mixer.' : 'Controls are available from the local dashboard on the USB-connected computer.'}</p>}
         {controlAvailable && !fresh && <p className="notice is-warn">{compact ? 'Stale data: resume disabled. STOP requires a device acknowledgement.' : 'No fresh mixer data. Resume is disabled. STOP can still be attempted, but its result must be acknowledged.'}</p>}
         {fresh && !mixer.hmi_connected && <p className="notice is-warn">Restore the Nextion page-0 connection before resuming.</p>}
         <div role="status" aria-live="polite" className="mixer-result">

@@ -74,13 +74,18 @@ export const TrendPlot = ({ plot, history }) => {
   );
 };
 
-export const DashboardTrends = ({ history }) => (
+export const DashboardTrends = ({ history, connectionStatus = 'DISCONNECTED', serialStats }) => (
   <section className="card dashboard-trends" aria-labelledby="dashboard-trends-title">
     <div className="card-header">
       <h2 id="dashboard-trends-title">Live telemetry</h2>
       <span className="muted">{history.length} / 25 frames · Auto scale</span>
     </div>
-    {!history.length && <p className="trend-empty-hint">Connect the ESP32-S3 over USB to see live trends.</p>}
+    {!history.length && <p className="trend-empty-hint">{
+      connectionStatus === 'CONNECTED'
+        ? serialStats?.lines ? 'USB text is arriving. Waiting for a recognized sensor cycle or DATA row.' : 'USB is connected. Waiting for the first complete sensor reading.'
+        : connectionStatus === 'RECONNECTING' ? 'USB is reconnecting. Waiting for new sensor readings.'
+          : 'Connect the ESP32-S3 using Connect USB above to see live trends.'
+    }</p>}
     <div className="trend-grid">{PLOTS.map((plot) => <TrendPlot key={plot.id} plot={plot} history={history} />)}</div>
     <div className="trend-footer">Last 25 frames · Time (mm:ss) · Gaps indicate unavailable readings</div>
   </section>

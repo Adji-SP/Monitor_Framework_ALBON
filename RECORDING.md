@@ -47,7 +47,7 @@ an old sensor reading is a new sample on each mixer update.
   Measured mixer RPM stays blank: the hardware has no RPM feedback.
 
 No previous cached sensor frame is inserted at Start. Frames arriving during
-recording are captured directly from the WebSocket receive path, including
+recording are captured directly from the browser USB parser, including
 back-to-back frames with the same timestamp. Sensor/mixer timestamps and video
 share a session, but this is not precision hardware-synchronized acquisition.
 
@@ -55,7 +55,10 @@ share a session, but this is not precision hardware-synchronized acquisition.
 
 Run `npm run dev` from this folder, then open `http://localhost:3000`. This change
 does not require another firmware flash if the web-mixer firmware is already
-installed. Restart the backend after updating, not only the React page.
+installed. Restart the backend after updating, not only the React page. Then
+click **Connect USB** and allow access to the ESP32 port; see [direct USB setup](USB_DASHBOARD.md).
+The default API startup leaves USB to the browser. Storage still needs the API,
+but live readings and gauges do not need it or WebSocket.
 
 Keep the backend and browser open, the dashboard tab visible for the intended
 video, the computer awake and sufficient disk space free. Changing dashboard
@@ -72,7 +75,7 @@ visible error. Previously saved data remains. Video sessions are capped at
 Unexpected close/reload, crash, lost upload or backend restart can leave partial
 files. History labels incomplete/interrupted sessions; partial video may not
 play. Do not treat an interrupted session as complete. Data not received over
-WebSocket cannot be reconstructed; connection changes are recorded rather than
+USB cannot be reconstructed; connection changes are recorded rather than
 replaced by simulated readings. No recordings are automatically deleted.
 
 Video recording requires browser screen-capture support and a secure context
